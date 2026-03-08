@@ -23,7 +23,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
         AppRole appRole = AppRole.valueOf(roleName);
         Role role = roleRepository.findByRoleName(appRole)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -64,7 +65,5 @@ public class UserServiceImpl implements UserService {
                 user.getUpdatedDate()
         );
     }
-
-
 }
 
