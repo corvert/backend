@@ -1,7 +1,7 @@
 package investTracker.controllers;
 
 
-import investTracker.dto.UserDTO;
+import investTracker.dtos.UserDTO;
 import investTracker.models.User;
 import investTracker.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

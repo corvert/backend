@@ -1,6 +1,6 @@
-package investTracker.security.services;
+package investTracker.services.impl;
 
-import investTracker.dto.UserDTO;
+import investTracker.dtos.UserDTO;
 import investTracker.models.AppRole;
 import investTracker.models.Role;
 import investTracker.models.User;
