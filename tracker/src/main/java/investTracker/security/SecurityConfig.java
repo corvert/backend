@@ -59,6 +59,7 @@ public class SecurityConfig {
                 user1.setSignUpMethod("email");
                 user1.setRole(userRole);
                 userRepository.save(user1);
+
             }
 
             if (!userRepository.existsByUserName("admin")) {
