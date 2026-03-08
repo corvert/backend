@@ -1,0 +1,15 @@
+package investTracker.services;
+
+import investTracker.dtos.UserDTO;
+import investTracker.models.User;
+
+import java.util.List;
+
+public interface UserService {
+    void updateUserRole(Long userId, String roleName);
+
+    List<User> getAllUsers();
+
+    UserDTO getUserById(Long id);
+}
+
