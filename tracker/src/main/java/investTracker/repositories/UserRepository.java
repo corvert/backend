@@ -11,5 +11,7 @@ public interface UserRepository extends JpaRepository<investTracker.models.User,
     Optional<User> findByUserName(String username);
 
     Boolean existsByUserName(String username);
+    Boolean existsByEmail(String email);
+
 }
 
