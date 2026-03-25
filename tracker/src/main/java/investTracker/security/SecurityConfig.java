@@ -8,31 +8,38 @@ import investTracker.repositories.UserRepository;
 import investTracker.security.jwt.AuthEntryPointJwt;
 import investTracker.security.jwt.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.LocalDate;
-
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
 
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -40,30 +47,50 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception{
-        http.csrf(csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/auth/public/**"));
-        http.authorizeHttpRequests((requests) ->
-                requests
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(Customizer.withDefaults()) // IMPORTANT: enable CORS in Security chain
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/auth/public/**")
+                )
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/csrf-token").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll()
-                        .anyRequest().authenticated());
-        http.exceptionHandling(exception
-                -> exception.authenticationEntryPoint(unauthorizedHandler));
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .httpBasic(Customizer.withDefaults());
+
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        //http.formLogin(withDefaults());
-        http.httpBasic(withDefaults());
+
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration
-                                                                   authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Must exactly match frontend origin, e.g. http://localhost:3000
+        configuration.setAllowedOrigins(List.of(frontendUrl));
+        configuration.setAllowCredentials(true);
+
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-XSRF-TOKEN", "Accept", "Origin"));
+        configuration.setExposedHeaders(List.of("Set-Cookie"));
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -81,8 +108,7 @@ public class SecurityConfig {
                     .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_ADMIN)));
 
             if (!userRepository.existsByUserName("user1")) {
-                User user1 = new User("user1", "user1@example.com",
-                        passwordEncoder.encode("password"));
+                User user1 = new User("user1", "user1@example.com", passwordEncoder.encode("password"));
                 user1.setAccountNonLocked(false);
                 user1.setAccountNonExpired(true);
                 user1.setCredentialsNonExpired(true);
@@ -93,12 +119,10 @@ public class SecurityConfig {
                 user1.setSignUpMethod("email");
                 user1.setRole(userRole);
                 userRepository.save(user1);
-
             }
 
             if (!userRepository.existsByUserName("admin")) {
-                User admin = new User("admin", "admin@example.com",
-                        passwordEncoder.encode("admin"));
+                User admin = new User("admin", "admin@example.com", passwordEncoder.encode("admin"));
                 admin.setAccountNonLocked(true);
                 admin.setAccountNonExpired(true);
                 admin.setCredentialsNonExpired(true);
@@ -112,6 +136,4 @@ public class SecurityConfig {
             }
         };
     }
-
-
 }
