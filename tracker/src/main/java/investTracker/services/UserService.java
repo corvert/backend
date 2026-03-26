@@ -22,5 +22,7 @@ public interface UserService {
     void updateAccountExpiryStatus(Long userId, boolean expire);
 
     void updateAccountEnabledStatus(Long userId, boolean enabled);
+
+    void updateCredentialsExpiryStatus(Long userId, boolean expire);
 }
 

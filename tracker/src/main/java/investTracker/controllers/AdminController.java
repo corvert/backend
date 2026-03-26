@@ -63,6 +63,12 @@ public class AdminController {
         return ResponseEntity.ok("Account enabled status updated");
     }
 
+    @PutMapping("/update-credentials-expiry-status")
+    public ResponseEntity<String> updateCredentialsExpiryStatus(@RequestParam Long userId, @RequestParam boolean expire) {
+        userService.updateCredentialsExpiryStatus(userId, expire);
+        return ResponseEntity.ok("Credentials expiry status updated");
+    }
+
 
 
 }
