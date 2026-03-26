@@ -80,5 +80,10 @@ public class UserServiceImpl implements UserService {
         user.setAccountNonLocked(!lock);
         userRepository.save(user);
     }
+
+    @Override
+    public List<Role> getAllRoles() {
+        return roleRepository.findAll();
+    }
 }
 

@@ -2,6 +2,7 @@ package investTracker.controllers;
 
 
 import investTracker.dtos.UserDTO;
+import investTracker.models.Role;
 import investTracker.models.User;
 import investTracker.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,11 @@ public class AdminController {
     public ResponseEntity<String> updateAccountLockStatus(@RequestParam Long userId, @RequestParam boolean lock) {
         userService.updateAccountLockStatus(userId, lock);
         return ResponseEntity.ok("Account lock status updated");
+    }
+
+    @GetMapping("/roles")
+    public List<Role> getAllRoles() {
+        return userService.getAllRoles();
     }
 
 
