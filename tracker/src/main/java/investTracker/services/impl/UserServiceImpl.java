@@ -85,5 +85,13 @@ public class UserServiceImpl implements UserService {
     public List<Role> getAllRoles() {
         return roleRepository.findAll();
     }
+
+    @Override
+    public void updateAccountExpiryStatus(Long userId, boolean expire) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        user.setAccountNonExpired(!expire);
+        userRepository.save(user);
+    }
 }
 

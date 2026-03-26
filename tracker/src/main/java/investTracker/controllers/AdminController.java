@@ -38,7 +38,8 @@ public class AdminController {
     }
 
     @PutMapping("/update-lock-status")
-    public ResponseEntity<String> updateAccountLockStatus(@RequestParam Long userId, @RequestParam boolean lock) {
+    public ResponseEntity<String> updateAccountLockStatus(@RequestParam Long userId,
+                                                          @RequestParam boolean lock) {
         userService.updateAccountLockStatus(userId, lock);
         return ResponseEntity.ok("Account lock status updated");
     }
@@ -46,6 +47,13 @@ public class AdminController {
     @GetMapping("/roles")
     public List<Role> getAllRoles() {
         return userService.getAllRoles();
+    }
+
+    @PutMapping("/update-expiry-status")
+    public ResponseEntity<String> updateAccountExpiryStatus(@RequestParam Long userId,
+                                                            @RequestParam boolean expire) {
+        userService.updateAccountExpiryStatus(userId, expire);
+        return ResponseEntity.ok("Account expiry status updated");
     }
 
 
