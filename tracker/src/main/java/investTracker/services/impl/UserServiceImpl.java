@@ -72,5 +72,13 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.findByUserName(username);
         return user.orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
+
+    @Override
+    public void updateAccountLockStatus(Long userId, boolean lock) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        user.setAccountNonLocked(!lock);
+        userRepository.save(user);
+    }
 }
 

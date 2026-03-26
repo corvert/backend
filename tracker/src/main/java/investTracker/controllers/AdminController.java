@@ -36,5 +36,11 @@ public class AdminController {
         return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
     }
 
+    @PutMapping("/update-lock-status")
+    public ResponseEntity<String> updateAccountLockStatus(@RequestParam Long userId, @RequestParam boolean lock) {
+        userService.updateAccountLockStatus(userId, lock);
+        return ResponseEntity.ok("Account lock status updated");
+    }
+
 
 }
