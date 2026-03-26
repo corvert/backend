@@ -15,7 +15,9 @@ public class NoteServiceImpl implements NoteService {
     @Autowired
     private NoteRepository noteRepository;
 
-   private AuditLogService auditLogService;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     @Override
     public Note createNoteForUser(String username, String content) {
