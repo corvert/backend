@@ -8,6 +8,7 @@ import investTracker.repositories.RoleRepository;
 import investTracker.repositories.UserRepository;
 import investTracker.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
@@ -108,6 +112,18 @@ public class UserServiceImpl implements UserService {
                 -> new RuntimeException("User not found"));
         user.setCredentialsNonExpired(!expire);
         userRepository.save(user);
+    }
+
+    @Override
+    public void updatePassword(Long userId, String password) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setPassword(passwordEncoder.encode(password));
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update password");
+        }
     }
 }
 
