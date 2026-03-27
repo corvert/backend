@@ -2,20 +2,29 @@ package investTracker.services.impl;
 
 import investTracker.dtos.UserDTO;
 import investTracker.models.AppRole;
+import investTracker.models.PasswordResetToken;
 import investTracker.models.Role;
 import investTracker.models.User;
+import investTracker.repositories.PasswordResetTokenRepository;
 import investTracker.repositories.RoleRepository;
 import investTracker.repositories.UserRepository;
 import investTracker.services.UserService;
+import investTracker.util.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
+    @Value("${frontend.url}")
+    String frontendUrl;
 
     @Autowired
     UserRepository userRepository;
@@ -25,6 +34,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    EmailService emailService;
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
@@ -124,6 +139,36 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to update password");
         }
+    }
+
+    @Override
+    public void gereratePasswordResetToken(String email){
+        User user = userRepository.findByEmail(email).orElseThrow(()
+                -> new RuntimeException("User not found with email: " + email));
+        String token = UUID.randomUUID().toString();
+        Instant expiryDate = Instant.now().plus(1, ChronoUnit.HOURS);
+        PasswordResetToken resetToken = new PasswordResetToken(token, expiryDate, user);
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
+        //Send email to user
+        emailService.sendPasswordResetEmail(user.getEmail(), resetUrl);
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid password reset token"));
+        if (resetToken.isUsed() || resetToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new RuntimeException("Password reset token is invalid or expired");
+        }
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Mark the token as used
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
     }
 }
 

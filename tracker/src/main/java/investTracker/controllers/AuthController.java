@@ -210,4 +210,32 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("Logout successful!"));
     }
 
+    @PostMapping("/public/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email){
+        try {
+            userService.gereratePasswordResetToken(email);
+            return ResponseEntity.ok(new MessageResponse("Password reset email sent successfully!"));
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error sending password resest email: " + e.getMessage()));
+        }
+
+    }
+
+    @PostMapping("/public/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token,
+                                           @RequestParam String newPassword){
+        try {
+            userService.resetPassword(token, newPassword);
+            return ResponseEntity.ok(new MessageResponse("Password reset successful!"));
+        }catch (RuntimeException e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse("Error resetting password: " + e.getMessage()));
+        }
+    }
+
+
 }
