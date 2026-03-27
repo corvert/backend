@@ -11,7 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -27,10 +27,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
-
     @Autowired
     private final UserService userService;
 
@@ -38,114 +39,143 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     private final JwtUtils jwtUtils;
 
     @Autowired
-    RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
 
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    String username;
-    String idAttributeKey;
-
+    //	private String idAttributeKey;
     @Override
-    public void onAuthenticationSuccess(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-                                        @NonNull Authentication authentication) throws ServletException, IOException {
+    public void onAuthenticationSuccess(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication authentication)
+            throws ServletException, IOException {
 
-        OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
+        OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
 
-        if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())
-                || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
-            DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
-            Map<String, Object> attributes = principal.getAttributes();
-            String email = attributes.getOrDefault("email", "").toString();
-            String name = attributes.getOrDefault("name", "").toString();
-            if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
-                username = attributes.getOrDefault("login", "").toString();
-                idAttributeKey = "id";
-            } else if ("google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
-                username = email.split("@")[0];
-                idAttributeKey = "sub";
-            } else {
-                username = "";
-                idAttributeKey = "id";
-            }
-            System.out.println("HELLO OAUTH: " + email + " : " + name + " : " + username);
+        DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
+        Map<String, Object> attributes = principal.getAttributes();
 
-            userService.findByEmail(email)
-                    .ifPresentOrElse(user -> {
-                        DefaultOAuth2User oauthUser = new DefaultOAuth2User(
-                                List.of(new SimpleGrantedAuthority(user.getRole().getRoleName().name())),
-                                attributes,
-                                idAttributeKey
-                        );
-                        Authentication securityAuth = new OAuth2AuthenticationToken(
-                                oauthUser,
-                                List.of(new SimpleGrantedAuthority(user.getRole().getRoleName().name())),
-                                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()
-                        );
-                        SecurityContextHolder.getContext().setAuthentication(securityAuth);
-                    }, () -> {
-                        User newUser = new User();
-                        Optional<Role> userRole = roleRepository.findByRoleName(AppRole.ROLE_USER); // Fetch existing role
-                        if (userRole.isPresent()) {
-                            newUser.setRole(userRole.get()); // Set existing role
-                        } else {
-                            // Handle the case where the role is not found
-                            throw new RuntimeException("Default role not found");
-                        }
-                        newUser.setEmail(email);
-                        newUser.setUserName(username);
-                        newUser.setSignUpMethod(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-                        userService.registerUser(newUser);
-                        DefaultOAuth2User oauthUser = new DefaultOAuth2User(
-                                List.of(new SimpleGrantedAuthority(newUser.getRole().getRoleName().name())),
-                                attributes,
-                                idAttributeKey
-                        );
-                        Authentication securityAuth = new OAuth2AuthenticationToken(
-                                oauthUser,
-                                List.of(new SimpleGrantedAuthority(newUser.getRole().getRoleName().name())),
-                                oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()
-                        );
-                        SecurityContextHolder.getContext().setAuthentication(securityAuth);
-                    });
-        }
-        this.setAlwaysUseDefaultTargetUrl(true);
+        String provider = token.getAuthorizedClientRegistrationId();
 
-        // JWT TOKEN LOGIC
-        DefaultOAuth2User oauth2User = (DefaultOAuth2User) authentication.getPrincipal();
-        Map<String, Object> attributes = oauth2User.getAttributes();
-
-        // Extract necessary attributes
         String email = (String) attributes.get("email");
-        System.out.println("OAuth2LoginSuccessHandler: " + username + " : " + email);
+        String name = String.valueOf(attributes.getOrDefault("name", ""));
+        String username;
 
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>(
-                oauth2User.getAuthorities().stream()
-                        .map(authority
-                                -> new SimpleGrantedAuthority(authority.getAuthority()))
-                        .collect(Collectors.toList()));
-        User user = userService.findByEmail(email).orElseThrow(()
-                -> new RuntimeException("User not found with email: " + email));
-        authorities.add(new SimpleGrantedAuthority(user.getRole().getRoleName().name()));
+        String idAttributeKey;
 
-        // Create UserDetailsImpl instance
+        // FIX APPLIED — Clean provider branching with correct braces
+        if ("github".equals(provider)) {
+
+            username = String.valueOf(attributes.getOrDefault("login", ""));
+            idAttributeKey = "id";
+
+            // FIX APPLIED — GitHub may not return email
+            if (email == null || email.isBlank()) {
+                email = username + "@github.local";
+            }
+
+        } else if ("google".equals(provider)) {
+
+            username = email.split("@")[0];
+            idAttributeKey = "sub";
+
+        } else {
+
+            username = "user";
+            idAttributeKey = "id";
+        }
+
+        log.info("HELLO OAUTH: {} : {} : {}", email, name, username);
+
+        String finalEmail = email;
+        String finalUsername = username;
+        String finalIdKey = idAttributeKey;
+
+        userService.findByEmail(finalEmail)
+                .ifPresentOrElse(user -> {
+
+                    DefaultOAuth2User oauthUser =
+                            new DefaultOAuth2User(
+                                    List.of(new SimpleGrantedAuthority(user.getRole().getRoleName().name())),
+                                    attributes,
+                                    finalIdKey
+                            );
+
+                    Authentication newAuth =
+                            new OAuth2AuthenticationToken(
+                                    oauthUser,
+                                    oauthUser.getAuthorities(),
+                                    provider
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+                }, () -> {
+
+                    User newUser = new User();
+                    Role role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                            .orElseThrow(() -> new RuntimeException("Default role not found"));
+
+                    newUser.setRole(role);
+                    newUser.setEmail(finalEmail);
+                    newUser.setUserName(finalUsername);
+                    newUser.setSignUpMethod(provider);
+
+                    userService.registerUser(newUser);
+
+                    DefaultOAuth2User oauthUser =
+                            new DefaultOAuth2User(
+                                    List.of(new SimpleGrantedAuthority(role.getRoleName().name())),
+                                    attributes,
+                                    finalIdKey
+                            );
+
+                    Authentication newAuth =
+                            new OAuth2AuthenticationToken(
+                                    oauthUser,
+                                    oauthUser.getAuthorities(),
+                                    provider
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(newAuth);
+                });
+
+        // FIX APPLIED — Always use updated authentication
+        Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+        DefaultOAuth2User oauth2User = (DefaultOAuth2User) currentAuth.getPrincipal();
+
+        String jwtEmail = (String) oauth2User.getAttributes().get("email");
+
+        if (jwtEmail == null || jwtEmail.isBlank()) {
+                        jwtEmail = finalUsername + "@github.local";
+        }
+
+        User user = userService.findByEmail(jwtEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Set<SimpleGrantedAuthority> authorities =
+                Set.of(new SimpleGrantedAuthority(user.getRole().getRoleName().name()));
+
         UserDetailsImpl userDetails = new UserDetailsImpl(
-                null,
-                username,
-                email,
+                user.getUserId(),
+                finalUsername,
+                jwtEmail,
                 null,
                 false,
                 authorities
         );
 
-        // Generate JWT token
         String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
-        // Redirect to the frontend with the JWT token
-        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+        String targetUrl = UriComponentsBuilder
+                .fromUriString(frontendUrl + "/auth/oauth2/redirect")
                 .queryParam("token", jwtToken)
-                .build().toUriString();
-        this.setDefaultTargetUrl(targetUrl);
-        super.onAuthenticationSuccess(request, response, authentication);
+                .build()
+                .toUriString();
+
+                // Explicit redirect avoids SavedRequest fallback (which was causing /error redirects).
+                getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }
