@@ -1,0 +1,11 @@
+package investTracker.services;
+
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+
+public interface TotpService {
+    GoogleAuthenticatorKey generateSecret();
+
+    String gerQrCodeUrl(GoogleAuthenticatorKey secret, String username);
+
+    boolean verifyCode(String secret, int code);
+}

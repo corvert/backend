@@ -1,5 +1,6 @@
 package investTracker.services;
 
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import investTracker.dtos.UserDTO;
 import investTracker.models.Role;
 import investTracker.models.User;
@@ -35,5 +36,13 @@ public interface UserService {
     Optional<User> findByEmail(String email);
 
     User registerUser(User user);
+
+    GoogleAuthenticatorKey generate2FASecret(Long userId);
+
+    boolean validate2FACode(Long userId, int code);
+
+    void enable2FA(Long userId);
+
+    void disable2FA(Long userId);
 }
 
