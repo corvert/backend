@@ -12,6 +12,7 @@ import investTracker.repositories.UserRepository;
 import investTracker.services.TotpService;
 import investTracker.services.UserService;
 import investTracker.util.EmailService;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,8 +49,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         AppRole appRole = AppRole.valueOf(roleName);
         Role role = roleRepository.findByRoleName(appRole)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -99,8 +99,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateAccountLockStatus(Long userId, boolean lock) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setAccountNonLocked(!lock);
         userRepository.save(user);
     }
@@ -112,24 +111,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateAccountExpiryStatus(Long userId, boolean expire) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setAccountNonExpired(!expire);
         userRepository.save(user);
     }
 
     @Override
     public void updateAccountEnabledStatus(Long userId, boolean enabled) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setEnabled(enabled);
         userRepository.save(user);
     }
 
     @Override
     public void updateCredentialsExpiryStatus(Long userId, boolean expire) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setCredentialsNonExpired(!expire);
         userRepository.save(user);
     }
@@ -137,8 +133,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updatePassword(Long userId, String password) {
         try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = getUser(userId);
             user.setPassword(passwordEncoder.encode(password));
             userRepository.save(user);
         } catch (Exception e) {
@@ -191,8 +186,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public GoogleAuthenticatorKey generate2FASecret(Long userId){
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         GoogleAuthenticatorKey key = totpService.generateSecret();
         user.setTwoFactorSecret(key.getKey());
         userRepository.save(user);
@@ -201,15 +195,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean validate2FACode(Long userId, int code){
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         return totpService.verifyCode(user.getTwoFactorSecret(), code);
     }
 
     @Override
     public void enable2FA(Long userId){
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setTwoFactorEnabled(true);
         userRepository.save(user);
 
@@ -217,11 +209,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void disable2FA(Long userId){
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new RuntimeException("User not found"));
+        User user = getUser(userId);
         user.setTwoFactorEnabled(false);
         userRepository.save(user);
 
+    }
+
+    private @NonNull User getUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        return user;
     }
 
 
