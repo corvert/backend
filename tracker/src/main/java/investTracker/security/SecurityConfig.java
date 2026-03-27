@@ -1,5 +1,6 @@
 package investTracker.security;
 
+import investTracker.config.OAuth2LoginSuccessHandler;
 import investTracker.models.AppRole;
 import investTracker.models.Role;
 import investTracker.models.User;
@@ -7,11 +8,13 @@ import investTracker.repositories.RoleRepository;
 import investTracker.repositories.UserRepository;
 import investTracker.security.jwt.AuthEntryPointJwt;
 import investTracker.security.jwt.AuthTokenFilter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -44,6 +47,10 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
+    @Autowired
+    @Lazy
+    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
@@ -64,9 +71,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/csrf-token").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> {
+                    oauth2.successHandler(oAuth2LoginSuccessHandler);
+                })
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(Customizer.withDefaults())
+        ;
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
@@ -105,7 +117,7 @@ public class SecurityConfig {
 
     @Bean
     public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+                                      PasswordEncoder passwordEncoder) {
         return args -> {
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
                     .orElseGet(() -> roleRepository.save(new Role(AppRole.ROLE_USER)));

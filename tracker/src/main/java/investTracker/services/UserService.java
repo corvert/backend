@@ -5,6 +5,7 @@ import investTracker.models.Role;
 import investTracker.models.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
     void updateUserRole(Long userId, String roleName);
@@ -30,5 +31,9 @@ public interface UserService {
     void gereratePasswordResetToken(String email);
 
     void resetPassword(String token, String newPassword);
+
+    Optional<User> findByEmail(String email);
+
+    User registerUser(User user);
 }
 
