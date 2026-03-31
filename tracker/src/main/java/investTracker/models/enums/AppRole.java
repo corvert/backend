@@ -1,4 +1,4 @@
-package investTracker.models;
+package investTracker.models.enums;
 
 public enum AppRole {
     ROLE_USER,

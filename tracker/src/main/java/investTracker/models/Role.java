@@ -1,6 +1,7 @@
 package investTracker.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import investTracker.models.enums.AppRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
