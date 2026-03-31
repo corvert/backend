@@ -24,4 +24,11 @@ public class AccountController {
     public List<AccountResponse> accountList(){
         return accountService.accountList();
     }
+
+    @PutMapping("/{accountId}")
+    public AccountResponse update(@PathVariable Long accountId, @RequestBody CreateAccountRequest request){
+        return accountService.update(accountId, request);
+
+    }
+
 }
