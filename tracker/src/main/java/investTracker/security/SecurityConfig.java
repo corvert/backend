@@ -1,7 +1,7 @@
 package investTracker.security;
 
 import investTracker.config.OAuth2LoginSuccessHandler;
-import investTracker.models.AppRole;
+import investTracker.models.enums.AppRole;
 import investTracker.models.Role;
 import investTracker.models.User;
 import investTracker.repositories.RoleRepository;

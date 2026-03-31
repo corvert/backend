@@ -2,7 +2,7 @@ package investTracker.services.impl;
 
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import investTracker.dtos.UserDTO;
-import investTracker.models.AppRole;
+import investTracker.models.enums.AppRole;
 import investTracker.models.PasswordResetToken;
 import investTracker.models.Role;
 import investTracker.models.User;

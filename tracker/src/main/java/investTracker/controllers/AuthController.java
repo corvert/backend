@@ -1,7 +1,7 @@
 package investTracker.controllers;
 
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
-import investTracker.models.AppRole;
+import investTracker.models.enums.AppRole;
 import investTracker.models.RefreshToken;
 import investTracker.models.Role;
 import investTracker.models.User;

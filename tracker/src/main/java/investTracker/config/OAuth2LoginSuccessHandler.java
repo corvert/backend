@@ -1,6 +1,6 @@
 package investTracker.config;
 
-import investTracker.models.AppRole;
+import investTracker.models.enums.AppRole;
 import investTracker.models.Role;
 import investTracker.models.User;
 import investTracker.repositories.RoleRepository;
@@ -25,7 +25,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Component

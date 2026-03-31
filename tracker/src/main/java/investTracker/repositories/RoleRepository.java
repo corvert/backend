@@ -1,6 +1,6 @@
 package investTracker.repositories;
 
-import investTracker.models.AppRole;
+import investTracker.models.enums.AppRole;
 import investTracker.models.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
