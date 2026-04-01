@@ -5,7 +5,6 @@ import investTracker.dtos.asset.CreateAssetRequest;
 import investTracker.models.Asset;
 import investTracker.models.enums.AssetType;
 import investTracker.repositories.AssetRepository;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,7 @@ public class AssetService {
 
     private static final Pattern ISIN_PATTERN = Pattern.compile("^[A-Z]{2}[A-Z0-9]{9}[0-9]$");
 
-    public AssetResponse create(@Valid CreateAssetRequest request) {
+    public AssetResponse create(CreateAssetRequest request) {
         AssetType assetType = request.getType();
         if(assetType == null){
             throw new IllegalArgumentException("Asset type is required");
