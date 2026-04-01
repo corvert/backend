@@ -11,10 +11,10 @@ public class CreateAssetRequest {
     private AssetType type;
 
     private String symbol;
+    private String isin;
 
     @NotBlank
     private String name;
 
-    @NotBlank
     private String currency;
 }

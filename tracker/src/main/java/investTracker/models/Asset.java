@@ -6,10 +6,14 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "assets",   indexes = {
-        @Index(name = "idx_assets_type", columnList = "type"),
-        @Index(name = "idx_assets_symbol", columnList = "symbol")
-})
+@Table(
+        name = "assets",
+        indexes = {
+                @Index(name = "idx_assets_type", columnList = "type"),
+                @Index(name = "idx_assets_symbol", columnList = "symbol"),
+                @Index(name = "idx_assets_isin", columnList = "isin")
+        }
+)
 public class Asset {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,10 +26,12 @@ public class Asset {
     @Column
     private String symbol;
 
+    @Column
+    private String isin;
+
     @Column(nullable = false)
     private String name;
 
-    // STOCK: USD/EUR/...  P2P: EUR
     @Column(nullable = false)
     private String currency;
 
@@ -36,8 +42,11 @@ public class Asset {
             symbol = symbol.trim().toUpperCase();
             if (symbol.isBlank()) symbol = null;
         }
+        if (isin != null) {
+            isin = isin.trim().toUpperCase();
+            if (isin.isBlank()) isin = null;
+        }
         if (name != null) name = name.trim();
         if (currency != null) currency = currency.trim().toUpperCase();
     }
-
 }

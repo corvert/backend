@@ -2,5 +2,7 @@ package investTracker.models.enums;
 
 public enum AssetType {
     STOCK,
-    P2P
+    P2P,
+    ETF,
+    BOND
 }

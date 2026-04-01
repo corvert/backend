@@ -10,6 +10,7 @@ public class AssetResponse {
     private Long id;
     private AssetType type;
     private String symbol;
+    private String isin;
     private String name;
     private String currency;
 }
