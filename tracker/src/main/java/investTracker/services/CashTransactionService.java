@@ -1,5 +1,6 @@
 package investTracker.services;
 
+import investTracker.dtos.cash.CashBalanceResponse;
 import investTracker.dtos.cash.CashTransactionResponse;
 import investTracker.dtos.cash.CreateCashTransactionRequest;
 import investTracker.models.CashTransaction;
@@ -11,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CashTransactionService {
@@ -60,6 +64,25 @@ public class CashTransactionService {
                 .stream().map(this::toTransactionDto).toList();
     }
 
+    public List<CashBalanceResponse> calculateBalances(Long accountId) {
+        Long userId = authUtil.loggedInUserId();
+        accountRepository.findByIdAndUserId(accountId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        List<CashTransaction> allTransactions = cashTransactionRepository
+                .findByUserIdAndAccountIdOrderByExecutedAtDesc(userId, accountId);
+
+        Map<String, BigDecimal> transactionSums = new HashMap<>();
+        for(CashTransaction transaction : allTransactions){
+            transactionSums.merge(transaction.getCurrency(), transaction.getAmount(), BigDecimal::add);
+        }
+        return transactionSums.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new CashBalanceResponse(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+    }
+
     private CashTransactionResponse toTransactionDto(CashTransaction transaction) {
         return new CashTransactionResponse(
                 transaction.getId(),
@@ -71,6 +94,7 @@ public class CashTransactionService {
                 transaction.getNote()
         );
     }
+
 
 
 }
