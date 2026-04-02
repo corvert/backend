@@ -36,7 +36,7 @@ public class CashTransaction {
     @Column(nullable = false)
     private String currency;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 6)
     private BigDecimal amount;
 
     @Column(name="executed_at", nullable = false)
