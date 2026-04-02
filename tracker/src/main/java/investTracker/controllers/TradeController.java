@@ -5,10 +5,11 @@ import investTracker.dtos.trade.TradeResponse;
 import investTracker.services.TradeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trades")
@@ -19,5 +20,14 @@ public class TradeController {
     @PostMapping
     public TradeResponse createTrade(@Valid @RequestBody CreateTradeRequest request) {
         return tradeService.createTrade(request);
+    }
+
+    @GetMapping
+    public List<TradeResponse> tradeList(
+            @RequestParam Long accountId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate to
+            ){
+        return tradeService.tradeList(accountId, from, to);
     }
 }

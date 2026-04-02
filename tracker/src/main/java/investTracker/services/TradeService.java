@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class TradeService {
@@ -86,6 +88,22 @@ public class TradeService {
 
     }
 
+    public List<TradeResponse> tradeList(Long accountId, LocalDate from, LocalDate to) {
+        Long userId = authUtil.loggedInUserId();
+
+        accountRepository.findByIdAndUserId(accountId, userId)
+                .orElseThrow(() -> new RuntimeException("Account not found or does not belong to user"));
+
+        if (from != null && to != null){
+            if(to.isBefore(from)) throw new IllegalArgumentException("To date cannot be before from date");
+            return tradeRepository.findByUserIdAndAccountIdAndExecutedAtBetweenOrderByExecutedAtDesc(
+                    userId, accountId, from, to
+            ).stream().map(this::toTradeDto).toList();
+        }
+        return tradeRepository.findByUserIdAndAccountIdOrderByExecutedAtDesc(userId, accountId).stream()
+                .map(this::toTradeDto).toList();
+    }
+
     private TradeResponse toTradeDto(Trade trade) {
         return new TradeResponse(
                 trade.getId(),
@@ -115,4 +133,6 @@ public class TradeService {
             throw new IllegalArgumentException("ExecutedAt is required");
         }
     }
+
+
 }
