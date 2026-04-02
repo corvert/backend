@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class CashTransactionService {
@@ -51,6 +52,14 @@ public class CashTransactionService {
         return toTransactionDto(savedTransaction);
     }
 
+    public List<CashTransactionResponse> transactionList(Long accountId) {
+        Long userId = authUtil.loggedInUserId();
+        accountRepository.findByIdAndUserId(accountId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        return cashTransactionRepository.findByUserIdAndAccountIdOrderByExecutedAtDesc(userId, accountId)
+                .stream().map(this::toTransactionDto).toList();
+    }
+
     private CashTransactionResponse toTransactionDto(CashTransaction transaction) {
         return new CashTransactionResponse(
                 transaction.getId(),
@@ -62,4 +71,6 @@ public class CashTransactionService {
                 transaction.getNote()
         );
     }
+
+
 }
