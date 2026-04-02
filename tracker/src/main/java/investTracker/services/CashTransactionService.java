@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +57,21 @@ public class CashTransactionService {
         return toTransactionDto(savedTransaction);
     }
 
-    public List<CashTransactionResponse> transactionList(Long accountId) {
+    public List<CashTransactionResponse> transactionList(Long accountId, LocalDate from, LocalDate to) {
         Long userId = authUtil.loggedInUserId();
+
         accountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        if (from != null && to != null) {
+            if (to.isBefore(from)) {
+                throw new IllegalArgumentException("'to' must be >= 'from'");
+            }
+            return cashTransactionRepository
+                    .findByUserIdAndAccountIdAndExecutedAtBetweenOrderByExecutedAtDesc(userId, accountId, from, to)
+                    .stream().map(this::toTransactionDto).toList();
+        }
+
         return cashTransactionRepository.findByUserIdAndAccountIdOrderByExecutedAtDesc(userId, accountId)
                 .stream().map(this::toTransactionDto).toList();
     }

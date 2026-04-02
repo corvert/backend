@@ -16,7 +16,7 @@ public class CashBalanceController {
     @Autowired
     private CashTransactionService cashTransactionService;
 
-    @GetMapping("/{accountId}/cash-balance")
+    @GetMapping("/{accountId}/cash-balances")
     public List<CashBalanceResponse> getBalances(@PathVariable Long accountId){
         return cashTransactionService.calculateBalances(accountId);
     }

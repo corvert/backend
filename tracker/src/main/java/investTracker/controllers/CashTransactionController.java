@@ -5,8 +5,10 @@ import investTracker.dtos.cash.CreateCashTransactionRequest;
 import investTracker.services.CashTransactionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,7 +23,11 @@ public class CashTransactionController {
     }
 
     @GetMapping
-    public List<CashTransactionResponse> transactionList(@RequestParam Long accountId){
-        return cashTransactionService.transactionList(accountId);
+    public List<CashTransactionResponse> transactionList(
+            @RequestParam Long accountId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ){
+        return cashTransactionService.transactionList(accountId, from, to);
     }
 }
