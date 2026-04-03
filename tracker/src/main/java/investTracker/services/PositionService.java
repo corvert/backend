@@ -18,7 +18,7 @@ import java.util.*;
 @Service
 public class PositionService {
     @Autowired
-    private AuthUtil authutil;
+    private AuthUtil authUtil;
     @Autowired
     private TradeRepository tradeRepository;
     @Autowired
@@ -28,9 +28,9 @@ public class PositionService {
 
 
     public List<PositionResponse> positionsForAccount(Long accountId) {
-        Long userId = authutil.loggedInUserId();
+        Long userId = authUtil.loggedInUserId();
         accountRepository.findByIdAndUserId(accountId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to user"));
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         List<Trade> trades = tradeRepository.findByUserIdAndAccountIdOrderByExecutedAtDesc(userId, accountId);
 
