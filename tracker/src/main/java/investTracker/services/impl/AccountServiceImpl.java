@@ -1,7 +1,7 @@
 package investTracker.services.impl;
 
-import investTracker.dtos.AccountResponse;
-import investTracker.dtos.CreateAccountRequest;
+import investTracker.dtos.account.AccountResponse;
+import investTracker.dtos.account.CreateAccountRequest;
 import investTracker.models.Account;
 import investTracker.repositories.AccountRepository;
 import investTracker.services.AccountService;

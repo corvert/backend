@@ -1,4 +1,4 @@
-package investTracker.dtos;
+package investTracker.dtos.account;
 
 import investTracker.models.enums.AccountKind;
 import investTracker.models.enums.TradingMode;

@@ -1,7 +1,7 @@
 package investTracker.controllers;
 
-import investTracker.dtos.AccountResponse;
-import investTracker.dtos.CreateAccountRequest;
+import investTracker.dtos.account.AccountResponse;
+import investTracker.dtos.account.CreateAccountRequest;
 import investTracker.services.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
