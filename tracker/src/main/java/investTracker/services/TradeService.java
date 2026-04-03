@@ -36,10 +36,10 @@ public class TradeService {
         Long userId = authUtil.loggedInUserId();
 
         accountRepository.findByIdAndUserId(request.getAccountId(), userId)
-                .orElseThrow(() -> new RuntimeException("Account not found or does not belong to user"));
+                .orElseThrow(() -> new IllegalArgumentException("Account not found or does not belong to user"));
 
         Asset asset = assetRepository.findById(request.getAssetId())
-                .orElseThrow(() -> new RuntimeException("Asset not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Asset not found"));
 
         validate(request);
 
@@ -80,7 +80,8 @@ public class TradeService {
             cashFee.setCurrency(currency);
             cashFee.setAmount(request.getFee().negate());
             cashFee.setExecutedAt(request.getExecutedAt());
-            cashFee.setNote("Fee for trade #" + savedTrade.getId());
+            cashFee.setNote("Fee for trade #" + savedTrade.getId() + ", " + asset.getSymbol()
+                    + ", " + savedTrade.getExecutedAt());
             cashTransactionRepository.save(cashFee);
         }
 

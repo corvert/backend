@@ -3,6 +3,7 @@ package investTracker.controllers;
 import investTracker.dtos.trade.CreateTradeRequest;
 import investTracker.dtos.trade.TradeResponse;
 import investTracker.services.TradeService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +18,7 @@ public class TradeController {
     @Autowired
     private TradeService tradeService;
 
-    @PostMapping
+    @Transactional
     public TradeResponse createTrade(@Valid @RequestBody CreateTradeRequest request) {
         return tradeService.createTrade(request);
     }
